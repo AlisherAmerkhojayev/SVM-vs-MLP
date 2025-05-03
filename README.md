@@ -2,136 +2,137 @@
 
 ---
 
-## Personal Motivation 
+## Personal Motivation *(customize this section)*
 
-This project was designed to explore the comparative performance of two foundational machine learning algorithms—**Multilayer Perceptron (MLP)** and **Support Vector Machine (SVM)**—in the context of **medical diagnostics**, a field where prediction accuracy directly translates into lives impacted. My objective was to gain practical insights into model behavior on small, imbalanced datasets and to understand how preprocessing, hyperparameter tuning, and evaluation methods affect real-world outcomes. The ability to generalize findings from a clinical dataset to other domains such as finance (e.g., fraud detection) or marketing (e.g., churn prediction) illustrates the versatility and transferable value of these approaches.
-
----
-
-## 📌 Project Overview
-
-This study compares MLP and SVM for **binary classification of Type 2 diabetes** using a dataset from the National Institute of Diabetes and Digestive and Kidney Diseases. Each model was trained and optimized through GridSearchCV with cross-validation. Special attention was given to managing **imbalanced class distributions**, which frequently occur in clinical datasets.
+This study was undertaken to critically explore the trade-offs between **Multilayer Perceptrons (MLPs)** and **Support Vector Machines (SVMs)** for predictive modeling in healthcare, with a specific focus on **Type 2 diabetes classification**. In many data-driven industries—particularly healthcare, finance, and risk assessment—understanding the implications of model architecture, hyperparameter sensitivity, and interpretability is just as vital as maximizing accuracy. This project not only evaluates model performance but also demonstrates how technical modeling decisions align with broader goals like ethical deployment, cost-sensitivity, and domain adaptability. Insights gleaned from this analysis are applicable to any scenario involving imbalanced data, high-stakes decision-making, and the need for explainability.
 
 ---
 
-## 📊 Dataset Summary
+## Project Overview
 
-- **Source**: [Kaggle Diabetes Dataset](https://www.kaggle.com/datasets/akshaydattatraykhare/diabetes-dataset/data)
-- **Rows**: 768 female patients (Pima Indian heritage, age > 21)
-- **Target variable**: `Outcome` (0 = Non-diabetic, 1 = Diabetic)
-- **Attributes**:
-  - Pregnancies
-  - Glucose
-  - BloodPressure
-  - SkinThickness
-  - Insulin
-  - BMI
-  - DiabetesPedigreeFunction
-  - Age
+This work presents a systematic comparison of MLPs and SVMs on the Pima Indians Diabetes dataset. Beyond superficial accuracy comparisons, we delve into:
 
-> **Class Distribution**: 268 positive (diabetic), 500 negative
-
-### Handling Missing Values
-Some features contained physiologically impossible values (e.g. zero BMI or insulin). These were replaced with **NaN**, and **column medians** were imputed to preserve distribution integrity without introducing external bias.
+- **Hyperparameter optimization via grid search**
+- **Cross-validation strategies for generalizability**
+- **Feature distribution handling through scaling and imputation**
+- **Performance diagnostics using ROC-AUC, confusion matrices, and precision-recall tradeoffs**
 
 ---
 
-## 📊 Exploratory Data Analysis (EDA)
+## Dataset Summary
 
-- **Distribution**: Glucose, BloodPressure, and BMI were roughly normal. Others were right-skewed.
-- **Outliers**: Retained due to clinical relevance. Outlier patients may provide critical insights in predictive modeling.
-- **Correlation Matrix**:
-  - Most features showed weak pairwise correlation.
-  - Higher correlation observed between SkinThickness and BMI; Age and Pregnancies.
+- **Source**: [Kaggle - Pima Indians Diabetes Database](https://www.kaggle.com/datasets/akshaydattatraykhare/diabetes-dataset/data)
+- **Rows**: 768
+- **Features**: 8 (numeric)
+- **Target**: `Outcome` ∈ {0 (non-diabetic), 1 (diabetic)}
+- **Imbalance**: 65% non-diabetic, 35% diabetic
 
-> This lack of strong linear correlation supports the use of models capable of capturing nonlinear relationships—justifying the use of both MLP and kernel-based SVMs.
+### Feature Types:
+- Demographics: `Age`, `Pregnancies`
+- Clinical metrics: `Glucose`, `BloodPressure`, `SkinThickness`, `Insulin`, `BMI`, `DiabetesPedigreeFunction`
+
+### Data Cleaning:
+- Implausible values (e.g. `0` for `BMI`) treated as missing
+- **Median imputation** applied to preserve robustness
 
 ---
 
-## ⚙️ Methodology
+## Exploratory Data Analysis
 
-### Data Preprocessing
-- **Normalization**: All features scaled to unit norm using `StandardScaler`.
+- **Glucose** and **BMI** distributions approximated normality post-imputation
+- **Insulin** and **Pedigree Function** were skewed; retained due to medical relevance
+- Weak correlations between features—suitable for nonlinear models like MLP and kernelized SVM
+- Class imbalance addressed via:
+  - **SMOTE** for MLP
+  - **Class-weight adjustment** for SVM
+
+---
+
+## Data Processing & Model Setup
+
+- **Scaler**: `StandardScaler` for both models
 - **Split**: 80% training / 20% testing
-- **Class Imbalance Handling**:
-  - MLP: SMOTE (Synthetic Minority Oversampling Technique)
-  - SVM: `class_weight='balanced'`
-
-> Class imbalance is often overlooked, yet in high-stakes applications like medical screening, failing to detect minority class instances can have severe consequences. This choice reflects a real-world focus on fairness and sensitivity.
+- **Imbalance strategies**:
+  - `SMOTE` used for MLP to synthetically oversample minority class
+  - `class_weight='balanced'` used for SVM to penalize misclassification proportionally
 
 ---
 
-## 🧠 Model 1: Multilayer Perceptron (MLP)
+## Model 1: Multilayer Perceptron (MLP)
 
-- **Framework**: `MLPClassifier` from `scikit-learn`
-- **GridSearch Parameters**:
-  - `activation`: `relu`, `tanh`
+- **Library**: scikit-learn `MLPClassifier`
+- **GridSearchCV parameters**:
+  - `activation`: [`relu`, `tanh`]
   - `hidden_layer_sizes`: [(5,), (10,), (15,), (15,15)]
   - `alpha`: [0.0001, 0.001]
-  - `solver`: `adam`, `sgd`
+  - `solver`: [`adam`, `sgd`]
   - `learning_rate_init`: [0.001, 0.01]
-- **Validation CV**: 5-fold
+- **Best configuration**: `tanh`, (15,15), `alpha=0.0001`, `adam`, `lr=0.01`
 
-> 🏆 **Best Params**: `tanh`, 2 layers of 15 neurons, `alpha=0.0001`, `adam`, `learning_rate_init=0.01`
+**Performance**:
+- Validation Accuracy: **84.3%**
+- Test Accuracy: **69.3%**
+- AUC Score: **0.72**
 
-- **Validation Accuracy**: 84.3%
-- **Test Accuracy**: 69.3%
-- **AUC Score**: 0.72
-
-### Observations
-- MLP demonstrated strong learning capacity, especially after SMOTE balanced the dataset.
-- However, the gap between validation and test accuracy hints at **overfitting**, a known risk in MLPs on small data.
-- In practice, neural networks require more data and regularization techniques (dropout, early stopping) to generalize well.
-
-> **Applications Elsewhere**: MLP's flexibility makes it valuable in tasks like fraud detection, recommendation systems, or credit scoring—where nonlinearities and interactions are common.
+> MLP learned flexible representations but showed signs of **overfitting**. Synthetic data from SMOTE likely introduced variance that didn't generalize well.
 
 ---
 
-## 🧪 Model 2: Support Vector Machine (SVM)
+## Model 2: Support Vector Machine (SVM)
 
-- **Framework**: `SVC` from `scikit-learn`
-- **GridSearch Parameters**:
-  - `kernel`: `linear`, `poly`, `rbf`
+- **Library**: scikit-learn `SVC`
+- **GridSearchCV parameters**:
+  - `kernel`: [`linear`, `poly`, `rbf`]
   - `C`: [0.1, 1, 10]
-  - `gamma`: `scale`, `auto`
-  - `degree`: [3, 4] (for `poly`)
-- **Class Imbalance**: `class_weight='balanced'`
-- **Validation CV**: 5-fold
+  - `gamma`: [`scale`, `auto`]
+  - `degree`: [3, 4] (for polynomial kernel)
+- **Best configuration**: `rbf`, `C=1`, `gamma=scale`, `class_weight='balanced'`
 
-> 🏆 **Best Params**: `rbf`, `C=1`, `gamma=scale`, `degree=3`
+**Performance**:
+- Validation Accuracy: **76.9%**
+- Test Accuracy: **72.3%**
+- AUC Score: **0.79**
 
-- **Validation Accuracy**: 76.9%
-- **Test Accuracy**: 72.3%
-- **AUC Score**: 0.79
-
-### Observations
-- SVM outperformed MLP in **generalization** and **recall**—making it better suited for this health-related task.
-- Kernel trick allowed it to model complex boundaries without requiring deep architectures.
-
-> **Applications Elsewhere**: SVMs are excellent in domains with small-to-medium data and high precision needs—like document classification, image recognition, and spam detection.
+> The **RBF kernel** captured complex patterns and **generalized better** than MLP. It achieved higher recall and F1—valuable for early disease detection.
 
 ---
 
-## 🔍 Key Evaluation Metrics
+## Evaluation Summary
 
-| Model | Validation Acc | Test Acc | AUC  | TP | FN | FP | TN |
-|-------|----------------|----------|------|----|----|----|----|
-| MLP   | 0.843          | 0.693    | 0.72 | 51 | 25 | 42 | 111 |
-| SVM   | 0.769          | 0.723    | 0.79 | 62 | 18 | 46 | 105 |
-
-> **SVM achieved higher AUC and true positives**, meaning it correctly identified more diabetic patients. In sensitive applications, recall often takes priority over precision.
+| Model | Val Acc | Test Acc | AUC  | Precision | Recall | F1   | TP | FN | FP | TN |
+|-------|---------|----------|------|-----------|--------|------|----|----|----|----|
+| MLP   | 84.3%   | 69.3%    | 0.72 | 0.55      | 0.67   | 0.60 | 51 | 25 | 42 | 111 |
+| SVM   | 76.9%   | 72.3%    | 0.79 | 0.57      | 0.78   | 0.66 | 62 | 18 | 46 | 105 |
 
 ---
 
-## 📈 Visualizations
+## Visualizations
 
-- **ROC Curves** for both models plotted
-- **Heatmaps** of grid search scores
-- **Confusion matrices** analyzed for each model
+- **ROC curves** compare classifier discrimination ability
+- **Confusion matrices** highlight Type I/II error tradeoffs
+- **GridSearch heatmaps** show hyperparameter sensitivity
 
 ---
 
-## 🏁 Conclusion
+## Insights & Applications
+
+- **MLP** is suited for large-scale, rich-feature domains like marketing or credit scoring.
+- **SVM** is preferred for structured, small datasets with interpretability demands, such as healthcare, fraud detection, or regulatory systems.
+- **False negatives are costlier** in medical contexts → SVM’s better recall is a critical asset.
+
+---
+
+## Future Work
+
+- Add **regularization (dropout)** and **early stopping** to MLP
+- Test ensemble learning: **VotingClassifier** combining MLP and SVM
+- Use **SHAP** or **LIME** for post-hoc model interpretability
+- Apply to **multimodal health records** or **longitudinal clinical datasets**
+- Optimize hyperparameters using **Bayesian optimization**
+
+---
+
+## Conclusion
 
 - **MLP** showed high potential but also instability without sufficient data or regularization.
 - **SVM** offered more **predictive robustness** and may be preferred in medical or risk-sensitive applications.
