@@ -2,7 +2,7 @@
 
 ---
 
-## Personal Motivation *(customize this section)*
+## Personal Motivation
 
 This study was undertaken to critically explore the trade-offs between **Multilayer Perceptrons (MLPs)** and **Support Vector Machines (SVMs)** for predictive modeling in healthcare, with a specific focus on **Type 2 diabetes classification**. In many data-driven industries—particularly healthcare, finance, and risk assessment—understanding the implications of model architecture, hyperparameter sensitivity, and interpretability is just as vital as maximizing accuracy. This project not only evaluates model performance but also demonstrates how technical modeling decisions align with broader goals like ethical deployment, cost-sensitivity, and domain adaptability. Insights gleaned from this analysis are applicable to any scenario involving imbalanced data, high-stakes decision-making, and the need for explainability.
 
